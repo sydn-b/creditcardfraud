@@ -1,5 +1,6 @@
 ##This is Logistic Regression
-
+#As of right now, it has high recall, which is catch fraud well
+#It has low precision, as in it's flagging normal transactions as fraud
 
 import pandas as pd
 
@@ -55,21 +56,27 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix
 
 # Train
-model = LogisticRegression(max_iter=1000)
+#model = LogisticRegression(max_iter=1000, class_weight='balanced')
+model = LogisticRegression(penalty='l1', solver='liblinear', max_iter=1000)
+
 model.fit(X_train_resampled, y_train_resampled)
 
-# Predict
-y_pred = model.predict(X_test)
+# Predict probabilities
+y_probs = model.predict_proba(X_test)[:, 1]
 
-# Evaluate 
+# Try changing this threshold value
+threshold = 0.8  # Start with 0.9, then test 0.8, 0.7, etc.
+y_pred = (y_probs >= threshold).astype(int)
+
+# Evaluate
 print("\n" + "="*60 + "\n")
-print("Confusion Matrix:")
+print(f"Evaluation with threshold = {threshold}")
+print("\nConfusion Matrix:")
 print(confusion_matrix(y_test, y_pred))
-
-print("\n" + "="*60 + "\n")
 
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred, digits=4))
+
 
 #visualizing the Confusion Matrix
 
@@ -83,6 +90,6 @@ plt.figure(figsize=(6,4))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Not Fraud', 'Fraud'], yticklabels=['Not Fraud', 'Fraud'])
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
-plt.title('Confusion Matrix')
+plt.title(f'Confusion Matrix (Threshold = {threshold})')
 plt.tight_layout()
 plt.show()
